@@ -5,6 +5,7 @@ import LoginForm from './LoginForm'
 import Message from './Message'
 import ArticleForm from './ArticleForm'
 import Spinner from './Spinner'
+import axios from 'axios'
 
 const articlesUrl = 'http://localhost:9000/api/articles'
 const loginUrl = 'http://localhost:9000/api/login'
@@ -32,22 +33,17 @@ export default function App() {
   const login = async ({ username, password }) => {
     // ✨ implement
     // We should flush the message state, turn on the spinner
-    // setMessage(''), setSpinnerOn(true)
-    console.log(JSON.stringify({ username, password }))
+    setMessage(''), setSpinnerOn(true)
     // and launch a request to the proper endpoint.
-    fetch('http://localhost:9000/api/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-      headers: new Headers({ 'Content-type': 'application/json' })
-    })
+    axios.post('http://localhost:9000/api/login', {username, password})
     .then(res => {
       console.log(res)
-      if (!res.ok) throw new Error('Problem logging in')
-      else {
-        console.log(res)
-      }
+      setMessage(res.data.message)
+      localStorage.setItem('token', res.data.token)
+      navigate('/articles')
     })
     .catch(err => console.error(err))
+    .finally(() => {setSpinnerOn(false)})
     // On success, we should set the token to local storage in a 'token' key,
     // put the server success message in its proper state, and redirect
     // to the Articles screen. Don't forget to turn off the spinner!
@@ -57,6 +53,17 @@ export default function App() {
     // ✨ implement
     // We should flush the message state, turn on the spinner
     setMessage(''), setSpinnerOn(true)
+    axios.get('http://localhost:9000/api/articles', {headers: {Authorization: localStorage.getItem('token')}})
+      .then(res => {
+        console.log(res)
+        setArticles(res.data.articles)
+        setMessage(res.data.message)
+      })
+      .catch(err => {
+        console.error(err)
+        if (err.response.status === 401) navigate('/login')
+      })
+      .finally(() => {setSpinnerOn(false)})
     // and launch an authenticated request to the proper endpoint.
     // On success, we should set the articles in their proper state and
     // put the server success message in its proper state.
@@ -70,15 +77,19 @@ export default function App() {
     // The flow is very similar to the `getArticles` function.
     // You'll know what to do! Use log statements or breakpoints
     // to inspect the response from the server.
+    console.log(article)
   }
 
   const updateArticle = ({ article_id, article }) => {
     // ✨ implement
     // You got this!
+    console.log(article_id)
+    console.log(article)
   }
 
   const deleteArticle = article_id => {
     // ✨ implement
+    console.log(article_id)
   }
 
   return (
@@ -100,11 +111,13 @@ export default function App() {
               <ArticleForm 
                 setCurrentArticleId={setCurrentArticleId} 
                 postArticle={postArticle} 
-                updateArticle={updateArticle} 
+                updateArticle={updateArticle}
+                currentArticle={articles.find(articles => articles.article_id == currentArticleId)} 
               />
               <Articles 
                 articles={articles} 
-                getArticles={getArticles} 
+                getArticles={getArticles}
+                currentArticleId={currentArticleId} 
                 setCurrentArticleId={setCurrentArticleId} 
                 deleteArticle={deleteArticle}
               />
