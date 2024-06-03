@@ -22,26 +22,39 @@ export default function ArticleForm(props) {
     setValues({ ...values, [id]: value })
   }
 
+  const cancelEdit = () => {
+    setCurrentArticleId()
+  }
+
   const onSubmit = evt => {
     evt.preventDefault()
     // ✨ implement
     console.log('onSubmit ran')
+    console.log(values)
     // We must submit a new post or update an existing one,
+    // these arguments are incorrect but im not sure what else it could be
+    const article_id = values.article_id
+    const article = { title: values.title, text: values.text, topic: values.topic }
+    if (currentArticle) updateArticle({ article_id, article })
+    else {postArticle(values)}
+    setCurrentArticleId()
+    setValues(initialFormValues)
     // depending on the truthyness of the `currentArticle` prop.
   }
 
   const isDisabled = () => {
     // ✨ implement
     // Make sure the inputs have some values
-    if (values.title !== '' || values.text !== '' || values.topic !== '') return false
+    if (values.title !== '' && values.text !== '' && values.topic !== '') return false
     else return true
   }
 
   return (
     // ✨ fix the JSX: make the heading display either "Edit" or "Create"
     // and replace Function.prototype with the correct function
+    // onSubmit={onSubmit} use to go on the line below
     <form id="form" onSubmit={onSubmit}>
-      <h2>Create Article</h2>
+      <h2>{currentArticle ? 'Edit Article' : 'Create Article'}</h2>
       <input
         maxLength={50}
         onChange={onChange}
@@ -64,7 +77,8 @@ export default function ArticleForm(props) {
       </select>
       <div className="button-group">
         <button disabled={isDisabled()} id="submitArticle">Submit</button>
-        <button onClick={Function.prototype}>Cancel edit</button>
+        {/* function.prototype needs to be changed with something but im not sure what yet */}
+        {currentArticle && <button onClick={() => cancelEdit()}>Cancel edit</button>}
       </div>
     </form>
   )

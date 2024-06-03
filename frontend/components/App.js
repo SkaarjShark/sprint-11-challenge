@@ -28,6 +28,9 @@ export default function App() {
     // and a message saying "Goodbye!" should be set in its proper state.
     // In any case, we should redirect the browser back to the login screen,
     // using the helper above.
+    if (localStorage.getItem('token')) localStorage.removeItem('token')
+    navigate('/')
+    setMessage('Goodbye!')
   }
 
   const login = async ({ username, password }) => {
@@ -61,7 +64,7 @@ export default function App() {
       })
       .catch(err => {
         console.error(err)
-        if (err.response.status === 401) navigate('/login')
+        if (err.response.status === 401) navigate('/')
       })
       .finally(() => {setSpinnerOn(false)})
     // and launch an authenticated request to the proper endpoint.
@@ -77,19 +80,61 @@ export default function App() {
     // The flow is very similar to the `getArticles` function.
     // You'll know what to do! Use log statements or breakpoints
     // to inspect the response from the server.
+    console.log('postArticle ran')
     console.log(article)
+    setMessage(''), setSpinnerOn(true)
+    axios.post('http://localhost:9000/api/articles', article, {headers: {Authorization: localStorage.getItem('token')}})
+      .then(res => {
+        console.log(res)
+        setMessage(res.data.message)
+        const article = res.data.article
+        const article_id = res.data.article.article_id
+        setArticles([...articles, article])
+        // working good, but it needs to update and clear the article form by itself without needing to refresh the page.
+      })
+      .catch(err => {console.error(err), setMessage(err.message)})
+      .finally(() => {setSpinnerOn(false)})
   }
 
   const updateArticle = ({ article_id, article }) => {
     // ✨ implement
     // You got this!
+    console.log('updateArticle ran')
     console.log(article_id)
     console.log(article)
+    setMessage(''), setSpinnerOn(true)
+    axios.put(`http://localhost:9000/api/articles/${article_id}`, article, {headers: {Authorization: localStorage.getItem('token')}})
+      .then(res => {
+        console.log(res)
+        setMessage(res.data.message)
+        const newArticles = articles.map(art => {
+          if (art.article_id === article_id) {
+            return {...article, article_id}
+          }
+          return art
+        })
+        setArticles(newArticles)
+      })
+      .catch(err => {console.error(err), setMessage(err.message)})
+      .finally(() => {setSpinnerOn(false)})
   }
 
   const deleteArticle = article_id => {
     // ✨ implement
+    console.log('deleteArticle ran')
     console.log(article_id)
+    setMessage(''), setSpinnerOn(true)
+    axios.delete(`http://localhost:9000/api/articles/${article_id}`, {headers: {Authorization: localStorage.getItem('token')}})
+      .then(res => {
+        console.log(res)
+        setMessage(res.data.message)
+        const newArticles = articles.filter(art => {
+          if (art.article_id !== article_id) return art
+        })
+        setArticles(newArticles)
+      })
+      .catch(err => {console.error(err), setMessage(err.message)})
+      .finally(() => {setSpinnerOn(false)})
   }
 
   return (
